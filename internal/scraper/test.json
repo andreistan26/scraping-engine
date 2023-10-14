@@ -1,0 +1,43 @@
+{
+    "entry": "https://www.olx.ro/oferte/q-rtx-3080-ti/",
+    "item": {
+        "selector": "a[href]",
+        "conditions": [
+            {
+                "attribute": {
+                    "key": "class",
+                    "value": ".css-10b0gli",
+                    "regex": "([0-9]| )*lei"
+                },
+                "comp": "<",
+                "comparand": "2000",
+                "type": "numeric"
+            }
+        ],
+        "return": [
+            {
+                "key": "price",
+                "attribute": {
+                    "key": "class",
+                    "value": ".css-10b0gli"
+                },
+                "type": "text"
+            }, {
+                "key": "name",
+                "attribute": {
+                    "key": "class",
+                    "value": "h6.css-16v5mdi.er34gjf0"
+                },
+                "type": "text"
+            }, {
+                "key": "url",
+                "attribute": {
+                    "key": "class",
+                    "value": ".css-rc5s2u"
+                },
+                "query_attribute": "href",
+                "type": "attribute"
+            }
+        ]
+    }
+}
