@@ -4,38 +4,48 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"scraper/internal/types"
 
+	"scraper/internal/log"
+	"scraper/internal/types"
+	"scraper/internal/utils"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func NewWorker(ctx context.Context, workerID int, ch *amqp.Channel) {
-	msgs, err := ch.Consume(
-		"job_queue",                 // Queue name
-		fmt.Sprintf("%d", workerID), // Consumer
-		false,                       // Auto Acknowledge (set to false for manual acknowledgment)
-		false,                       // Exclusive
-		false,                       // No Local
-		false,                       // No Wait
-		nil,                         // Arguments
+type WorkerConfig struct {
+	Ch     *amqp.Channel
+	DbPool *pgxpool.Pool
+	//RedisPool *redis.Client
+}
+
+func (worker *WorkerConfig) Work(ctx context.Context, workerID int) {
+	msgs, err := worker.Ch.Consume(
+		"job_queue",
+		fmt.Sprintf("%d", workerID),
+		false,
+		false,
+		false,
+		false,
+		nil,
 	)
 
-	if err != nil {
-		fmt.Printf("Failed to consume messages: %v", err)
-	}
+	utils.Fail(ctx, err, "Failed to consume from queue")
 
 	for msg := range msgs {
-		fmt.Printf("Worker %d received a message: %s", workerID, msg.Body)
+		log.FromContext(ctx).Debugf("Worker %d received a message: %s", workerID, msg.Body)
 
 		job := types.Job{}
 		json.Unmarshal(msg.Body, &job)
 
-		DoJob(job)
-
-		// Acknowledge the message to remove it from the queue
 		err = msg.Ack(false)
 		if err != nil {
-			fmt.Printf("Failed to acknowledge message: %v", err)
+			log.FromContext(ctx).Debugf("Failed to acknowledge message: %v", err)
+		}
+
+		err = worker.DoJob(ctx, &job)
+		if err != nil {
+			log.FromContext(ctx).Debugf("Error occured while running scraper job: %v\n", err)
 		}
 	}
 }

@@ -10,20 +10,20 @@ import (
 )
 
 func NewDBPool(ctx context.Context, maxConns int) (*pgxpool.Pool, error) {
-    if maxConns < 2 {
-        maxConns = 2
-    }
+	if maxConns < 2 {
+		maxConns = 2
+	}
 
-    url := fmt.Sprintf(
-        "%s?pool_max_conns=%d",
-        os.Getenv("DB_URL"),
-        maxConns,
-    )
+	url := fmt.Sprintf(
+		"%s?pool_max_conns=%d",
+		os.Getenv("DB_URL"),
+		maxConns,
+	)
 
-    config, err := pgxpool.ParseConfig(url)
-    Fail(err, "Error when parsing DB config")
+	config, err := pgxpool.ParseConfig(url)
+	Fail(ctx, err, "Error when parsing DB config")
 
-    config.MaxConnIdleTime = 30 * time.Second
+	config.MaxConnIdleTime = 30 * time.Second
 
-    return pgxpool.NewWithConfig(ctx, config)
+	return pgxpool.NewWithConfig(ctx, config)
 }

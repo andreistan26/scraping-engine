@@ -9,20 +9,20 @@ import (
 )
 
 type APIServerConfig struct {
-    DbPool *pgxpool.Pool
+	DbPool *pgxpool.Pool
 }
 
 func StartServer(config APIServerConfig) {
-    e := echo.New()
+	e := echo.New()
 
-    e.Use(middleware.Logger())
-    e.Use(middleware.Recover())
-    
-    h := &handler.Handler{
-        DbPool: config.DbPool,
-    }
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
-    e.GET("/jobs", h.JobsHandle)
+	h := &handler.Handler{
+		DbPool: config.DbPool,
+	}
 
-    e.Start(":6942")
+	e.GET("/jobs", h.JobsHandle)
+
+	e.Start(":6942")
 }
